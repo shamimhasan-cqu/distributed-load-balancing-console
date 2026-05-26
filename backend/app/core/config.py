@@ -52,6 +52,30 @@ class Settings(BaseSettings):
         if not self.PEER_NODES_RAW:
             return []
         return [peer.strip() for peer in self.PEER_NODES_RAW.split(",") if peer.strip()]
+        
+    def _read_secret_file(self, filename: str, env_val: Optional[str]) -> Optional[str]:
+        if env_val:
+            return env_val
+        path = os.path.join("/etc/secrets", filename)
+        if os.path.exists(path):
+            with open(path, "r") as f:
+                return f.read().strip()
+        return None
+
+    def get_azure_tenant_id(self) -> str:
+        return self._read_secret_file("AZURE_TENANT_ID", self.AZURE_TENANT_ID) or self.AZURE_TENANT_ID
+        
+    def get_azure_client_id(self) -> str:
+        return self._read_secret_file("AZURE_CLIENT_ID", self.AZURE_CLIENT_ID) or self.AZURE_CLIENT_ID
+        
+    def get_azure_client_secret(self) -> Optional[str]:
+        return self._read_secret_file("AZURE_CLIENT_SECRET", self.AZURE_CLIENT_SECRET)
+        
+    def get_azure_subscription_id(self) -> str:
+        return self._read_secret_file("AZURE_SUBSCRIPTION_ID", self.AZURE_SUBSCRIPTION_ID) or self.AZURE_SUBSCRIPTION_ID
+        
+    def get_azure_resource_group(self) -> str:
+        return self._read_secret_file("AZURE_RESOURCE_GROUP", self.AZURE_RESOURCE_GROUP) or self.AZURE_RESOURCE_GROUP
 
     class Config:
         env_file = ".env"

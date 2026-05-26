@@ -19,14 +19,13 @@ if not azure_logger.handlers:
 
 class AzureVMService:
     def __init__(self):
-        self.tenant_id = settings.AZURE_TENANT_ID.strip()
-        self.client_id = settings.AZURE_CLIENT_ID.strip()
-        self.client_secret = os.getenv("AZURE_CLIENT_SECRET", "").strip()
+        self.tenant_id = settings.get_azure_tenant_id().strip()
+        self.client_id = settings.get_azure_client_id().strip()
+        self.client_secret = (settings.get_azure_client_secret() or "").strip()
         
-        # The user provided a correct one explicitly to fix the caching/typo error.
-        self.subscription_id = "ff615065-f3b1-4075-94f7-2393933e9cc2"
+        self.subscription_id = settings.get_azure_subscription_id().strip()
             
-        self.resource_group = settings.AZURE_RESOURCE_GROUP.strip()
+        self.resource_group = settings.get_azure_resource_group().strip()
 
     def _get_client(self) -> ComputeManagementClient:
         credential = ClientSecretCredential(

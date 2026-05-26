@@ -220,7 +220,7 @@ export default function App() {
   useEffect(() => {
     async function fetchInitialRegistry() {
       try {
-        const nodesRes = await fetch((import.meta.env.VITE_API_URL || '') + '');
+        const nodesRes = await fetch((import.meta.env.VITE_API_URL || '') + '/api/v1/nodes');
         if (nodesRes.ok) {
           const backendNodesMap = await nodesRes.json();
           setNodes(current => mergeBackendNodes(backendNodesMap, current));
@@ -230,7 +230,7 @@ export default function App() {
       }
 
       try {
-        const logsRes = await fetch((import.meta.env.VITE_API_URL || '') + '');
+        const logsRes = await fetch((import.meta.env.VITE_API_URL || '') + '/api/v1/simulations/logs');
         if (logsRes.ok) {
           const backendLogs = await logsRes.json();
           if (backendLogs && backendLogs.length > 0) {
@@ -430,7 +430,7 @@ export default function App() {
 
     // First, attempt to route the workload via the FastAPI backend!
     try {
-      const response = await fetch((import.meta.env.VITE_API_URL || '') + '', {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + '/api/v1/tasks/dispatch', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -485,7 +485,7 @@ export default function App() {
       addLog('ORCHESTRATOR', 'warn', `Initiating physical power action for Azure instance ${node.name}...`);
       triggerNotification(`Initiating VM ${isCrashing ? 'stop' : 'start'} on Azure for ${node.name}...`, 'warn');
       
-      const res = await fetch((import.meta.env.VITE_API_URL || '') + ``, {
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/v1/azure/vms/${node.name}/${isCrashing ? 'stop' : 'start'}`, {
         method: 'POST'
       });
       
@@ -499,7 +499,7 @@ export default function App() {
   // Interactive REST service calls simulation
   const handleTriggerPowerCycle = async (nodeName: string, action: 'start' | 'stop' | 'restart') => {
     try {
-      const response = await fetch((import.meta.env.VITE_API_URL || '') + ``, {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/v1/azure/vms/${nodeName}/${action}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -538,7 +538,7 @@ export default function App() {
 
   const handleTriggerDeployExporter = async (nodeName: string) => {
     try {
-      const response = await fetch((import.meta.env.VITE_API_URL || '') + ``, { method: 'POST' });
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/v1/vm/deploy-exporter?node_id=${nodeName}`, { method: 'POST' });
       const data = await response.json();
       triggerNotification(`Exporter installed on ${nodeName}`, 'success');
       return data;
@@ -549,7 +549,7 @@ export default function App() {
   };
 
   const handleExecuteSsh = async (nodeName: string, command: string) => {
-    const response = await fetch((import.meta.env.VITE_API_URL || '') + '', {
+    const response = await fetch((import.meta.env.VITE_API_URL || '') + '/api/v1/vm/ssh-command', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ node_id: nodeName, command })
@@ -563,7 +563,7 @@ export default function App() {
   };
 
   const handleProbeTelemetry = async (nodeName: string) => {
-    const response = await fetch((import.meta.env.VITE_API_URL || '') + ``);
+    const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/v1/vm/metrics-monitor?node_id=${nodeName}`);
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
@@ -758,7 +758,7 @@ export default function App() {
                     onToggleSimulator={async () => {
                       if (isSimulating) {
                         try {
-                          const res = await fetch((import.meta.env.VITE_API_URL || '') + '', { method: 'POST' });
+                          const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/v1/simulations/stop', { method: 'POST' });
                           if (res.ok) {
                             setIsSimulating(false);
                             addLog('SCHEDULER', 'system', 'Backend load simulator stopped.');
@@ -776,7 +776,7 @@ export default function App() {
                           const scenario = selectedStrategy === 'predictive' ? 'heavy' : (Math.random() > 0.5 ? 'burst' : 'normal');
                           const tasks = 150;
                           const interval = simSpeed / 1000;
-                          const url = `/api/v1/simulations/start?scenario=${scenario}&strategy=${selectedStrategy}&tasks=${tasks}&interval=${interval}`;
+                          const url = (import.meta.env.VITE_API_URL || '') + `/api/v1/simulations/start?scenario=${scenario}&strategy=${selectedStrategy}&tasks=${tasks}&interval=${interval}`;
                           const res = await fetch(url, { method: 'POST' });
                           if (res.ok) {
                             setIsSimulating(true);
@@ -797,7 +797,7 @@ export default function App() {
                     onDispatchTask={executeSingleTaskDispatch}
                     onClearLogs={async () => {
                       try {
-                        const res = await fetch((import.meta.env.VITE_API_URL || '') + '', { method: 'DELETE' });
+                        const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/v1/simulations/logs', { method: 'DELETE' });
                         if (res.ok) {
                           setSimulationLog([]);
                           addLog('SCHEDULER', 'warn', 'Logs wiped from server and cached ledger.');

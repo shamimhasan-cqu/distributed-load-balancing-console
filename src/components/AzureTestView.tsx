@@ -23,7 +23,7 @@ export default function AzureTestView() {
         setVms(data.vms || []);
         addLog(`Success: Found ${data.vms?.length || 0} VMs.`);
       } else {
-        addLog(`Error: ${data.error}`);
+        addLog(`Error: ${data.error || data.detail || JSON.stringify(data)}`);
       }
     } catch (e: any) {
       addLog(`Request Exception: ${e.message}`);
