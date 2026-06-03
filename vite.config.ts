@@ -25,10 +25,17 @@ export default defineConfig(() => {
           target: 'ws://127.0.0.1:9000',
           ws: true,
           configure: (proxy, _options) => {
-            proxy.on('error', (err, _req, _res) => {
+            proxy.on('error', (err: any, _req, _res) => {
               if (err.code !== 'ECONNRESET' && err.code !== 'EPIPE') {
                 console.error('[vite proxy]', err);
               }
+            });
+            proxy.on('proxyReqWs', (proxyReq, req, socket) => {
+              socket.on('error', (err: any) => {
+                if (err.code === 'EPIPE' || err.code === 'ECONNRESET') {
+                  socket.destroy(); // Properly handle without crashing
+                }
+              });
             });
           },
         },
